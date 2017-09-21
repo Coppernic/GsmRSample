@@ -86,7 +86,7 @@ public class VoiceFragment extends Fragment implements GsmR.GsmRListener {
                 // Gets phone number
                 String phoneNumber = etPhoneNumber.getText().toString();
                 // Makes a phone call to phoneNumber
-                Utils.sendCommand(gsmR, CALL + phoneNumber, TAG);
+                Utils.sendCommand(gsmR, CALL + phoneNumber + ";", TAG);
             }
         });
 
