@@ -1,5 +1,6 @@
 package fr.coppernic.samples.gsmr;
 
+import android.content.Intent;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.FragmentManager;
@@ -9,9 +10,17 @@ import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 
+import fr.coppernic.sdk.powermgmt.PowerMgmt;
+import fr.coppernic.sdk.powermgmt.PowerMgmtFactory;
+import fr.coppernic.sdk.powermgmt.cone.identifiers.InterfacesCone;
+import fr.coppernic.sdk.powermgmt.cone.identifiers.ManufacturersCone;
+import fr.coppernic.sdk.powermgmt.cone.identifiers.ModelsCone;
+import fr.coppernic.sdk.powermgmt.cone.identifiers.PeripheralTypesCone;
+
 public class MainActivity extends AppCompatActivity {
 
     private FragmentManager fragmentManager = null;
+    private PowerMgmt powerMgmt;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -47,6 +56,13 @@ public class MainActivity extends AppCompatActivity {
 
             this.setupFragments();
         }
+
+        powerMgmt = PowerMgmtFactory.get().setContext(this)
+                .setPeripheralTypes(PeripheralTypesCone.Modem)
+                .setManufacturers(ManufacturersCone.Triorail)
+                .setModels(ModelsCone.Trm5_ext)
+                .setInterfaces(InterfacesCone.ExpansionPort)
+                .build();
     }
 
     private void setupFragments() {
@@ -75,5 +91,23 @@ public class MainActivity extends AppCompatActivity {
 
     private VoiceFragment getVoiceFragment() {
         return VoiceFragment.newInstance();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // If modem is not powered on, start Pin activity
+        // to power it on and enter pin
+        if (!powerMgmt.get()) {
+            Intent intent = new Intent(this, PinActivity.class);
+            startActivity(intent);
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // Powers off modem
+        powerMgmt.powerOff();
     }
 }

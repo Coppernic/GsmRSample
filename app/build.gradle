@@ -25,9 +25,8 @@ dependencies {
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    compile('fr.coppernic.sdk.gsmr:CpcGsmR:dev@aar') {
-        transitive = true
-    }
+    compile 'fr.coppernic.sdk.gsmr:CpcGsmR:dev@aar'
+    compile 'fr.coppernic.sdk.core:CpcCore:dev-cone_gsmr'
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.android.support:design:25.3.1'
     compile 'com.android.support:support-vector-drawable:25.3.1'

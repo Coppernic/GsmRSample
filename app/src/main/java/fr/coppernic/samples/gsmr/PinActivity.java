@@ -10,7 +10,15 @@ import android.view.View;
 import android.widget.EditText;
 
 import fr.coppernic.sdk.gsmr.GsmR;
+import fr.coppernic.sdk.powermgmt.PowerMgmt;
+import fr.coppernic.sdk.powermgmt.PowerMgmtFactory;
+import fr.coppernic.sdk.powermgmt.PowerUtilsNotifier;
+import fr.coppernic.sdk.powermgmt.cone.identifiers.InterfacesCone;
+import fr.coppernic.sdk.powermgmt.cone.identifiers.ManufacturersCone;
+import fr.coppernic.sdk.powermgmt.cone.identifiers.ModelsCone;
+import fr.coppernic.sdk.powermgmt.cone.identifiers.PeripheralTypesCone;
 import fr.coppernic.sdk.utils.core.CpcBytes;
+import fr.coppernic.sdk.utils.core.CpcResult;
 import fr.coppernic.sdk.utils.io.InstanceListener;
 
 public class PinActivity extends AppCompatActivity implements GsmR.GsmRListener {
@@ -18,6 +26,7 @@ public class PinActivity extends AppCompatActivity implements GsmR.GsmRListener 
 
     private GsmR gsmR;
     private EditText etPin;
+    private PowerMgmt powerMgmt;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,23 +45,37 @@ public class PinActivity extends AppCompatActivity implements GsmR.GsmRListener 
             }
         });
 
-        GsmR.Builder.get()
-                .withListener(this)
-                .build(this, new InstanceListener<GsmR>() {
-            @Override
-            public void onCreated(GsmR gsmR) {
-                PinActivity.this.gsmR = gsmR;
+        powerMgmt = PowerMgmtFactory.get().setContext(this)
+                .setPeripheralTypes(PeripheralTypesCone.Modem)
+                .setManufacturers(ManufacturersCone.Triorail)
+                .setModels(ModelsCone.Trm5_ext)
+                .setInterfaces(InterfacesCone.ExpansionPort)
+                .setNotifier(new PowerUtilsNotifier() {
+                    @Override
+                    public void onPowerUp(CpcResult.RESULT result, int i, int i1) {
+                        GsmR.Builder.get()
+                                .withListener(PinActivity.this)
+                                .build(PinActivity.this, new InstanceListener<GsmR>() {
+                                    @Override
+                                    public void onCreated(GsmR gsmR) {
+                                        PinActivity.this.gsmR = gsmR;
+                                        PinActivity.this.gsmR.open();
+                                        sendCommand("AT+CPIN?\r");
+                                    }
 
-                PinActivity.this.gsmR.open();
+                                    @Override
+                                    public void onDisposed(GsmR gsmR) {
 
-                sendCommand("AT+CPIN?\r");
-            }
+                                    }
+                                });
+                    }
 
-            @Override
-            public void onDisposed(GsmR gsmR) {
+                    @Override
+                    public void onPowerDown(CpcResult.RESULT result, int i, int i1) {
 
-            }
-        });
+                    }
+                })
+                .build();
     }
 
     @Override
@@ -91,6 +114,12 @@ public class PinActivity extends AppCompatActivity implements GsmR.GsmRListener 
         }
 
         return "";
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        powerMgmt.powerOn();
     }
 
     @Override
